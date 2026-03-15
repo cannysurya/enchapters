@@ -2,9 +2,7 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: #ffffff;
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
@@ -25,8 +23,46 @@
     font-weight: 800;
     background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-decoration: none;
+}
+
+.dynamicHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.homeIcon {
+    font-size: 1.25rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.homeIcon:hover {
+    transform: scale(1);
+}
+
+.navBookTitle {
+    font-family: var(--font-outfit), sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+    /* Prevent overflow on smaller screens */
 }
 
 .actions {
@@ -190,6 +226,10 @@
 
 /* ===== DARK MODE ===== */
 @media (prefers-color-scheme: dark) {
+    .navbar {
+        background: #1e293b;
+    }
+
     .dropdown {
         background: #1e293b;
         border-color: #334155;

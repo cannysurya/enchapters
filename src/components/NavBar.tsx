@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useState, useRef, useEffect } from 'react';
 import styles from './NavBar.module.css';
+import { useNav } from '@/context/NavContext';
 
 export default function NavBar() {
     const { data: session, status } = useSession();
@@ -21,11 +22,22 @@ export default function NavBar() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const { navTitle } = useNav();
+
     return (
         <nav className={styles.navbar}>
             <div className={styles.navContainer}>
                 <div className={styles.logo}>
-                    <Link href="/">Enchapters.</Link>
+                    {navTitle ? (
+                        <div className={styles.dynamicHeader}>
+                            <Link href="/" className={styles.homeIcon} title="Back to Library">
+                                ⬅
+                            </Link>
+                            <span className={styles.navBookTitle}>{navTitle}</span>
+                        </div>
+                    ) : (
+                        <Link href="/">Enchapters.</Link>
+                    )}
                 </div>
 
                 <div className={styles.actions}>

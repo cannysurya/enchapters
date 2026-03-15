@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
 import NavBar from '@/components/NavBar';
+import { NavProvider } from '@/context/NavContext';
 
 export const metadata: Metadata = {
   title: 'Enchapters',
-  description: 'A breezy and beautiful reading experience',
+  description: 'Immerse yourself in a breezy reading experience.',
 };
 
 export default function RootLayout({
@@ -17,8 +18,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <NavBar />
-          {children}
+          <NavProvider>
+            <NavBar />
+            {children}
+          </NavProvider>
         </AuthProvider>
       </body>
     </html>

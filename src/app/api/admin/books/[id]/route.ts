@@ -24,3 +24,23 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+    try {
+        const { id } = await context.params;
+        const session = await getServerSession(authOptions);
+
+        if (!session || session.user.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        await prisma.book.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Delete error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
