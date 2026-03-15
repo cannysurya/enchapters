@@ -367,6 +367,12 @@
     background: #eff6ff;
 }
 
+.deleteBtn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
 .emptyBooks {
     padding: 3rem 2rem;
     text-align: center;

@@ -2,9 +2,7 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: #ffffff;
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
@@ -25,6 +23,7 @@
     font-weight: 800;
     background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-decoration: none;
 }
@@ -190,6 +189,10 @@
 
 /* ===== DARK MODE ===== */
 @media (prefers-color-scheme: dark) {
+    .navbar {
+        background: #1e293b;
+    }
+
     .dropdown {
         background: #1e293b;
         border-color: #334155;

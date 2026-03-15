@@ -47,6 +47,31 @@ export default function BookList({ initialBooks }: { initialBooks: Book[] }) {
         }
     };
 
+    const deleteBook = async (id: string, title: string) => {
+        if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        setLoading(id);
+
+        try {
+            const res = await fetch(`/api/admin/books/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                setBooks(books.filter(b => b.id !== id));
+            } else {
+                alert('Failed to delete book');
+            }
+        } catch {
+            console.error('Failed to delete book');
+            alert('An error occurred during deletion');
+        } finally {
+            setLoading(null);
+        }
+    };
+
     if (books.length === 0) {
         return (
             <div className={styles.emptyBooks}>
@@ -73,6 +98,13 @@ export default function BookList({ initialBooks }: { initialBooks: Book[] }) {
                             disabled={loading === book.id}
                         >
                             {loading === book.id ? '...' : 'Change'}
+                        </button>
+                        <button
+                            onClick={() => deleteBook(book.id, book.title)}
+                            className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                            disabled={loading === book.id}
+                        >
+                            {loading === book.id ? '...' : 'Delete'}
                         </button>
                     </div>
                 </div>
