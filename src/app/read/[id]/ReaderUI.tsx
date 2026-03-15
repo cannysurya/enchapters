@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import styles from './reader.module.css';
+import { useNav } from '@/context/NavContext';
 
 type Book = { id: string; title: string; content: string };
 type Progress = { scrollPosition: number } | null;
@@ -32,6 +33,14 @@ export default function ReaderUI({
     const [bookmarkLabel, setBookmarkLabel] = useState('');
     const [showBookmarkInput, setShowBookmarkInput] = useState(false);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+    const { setNavTitle } = useNav();
+
+    // Set/Clear Nav Title
+    useEffect(() => {
+        setNavTitle(book.title);
+        return () => setNavTitle(null);
+    }, [book.title, setNavTitle]);
 
     // Restore scroll position
     useEffect(() => {
