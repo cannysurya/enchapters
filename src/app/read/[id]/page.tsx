@@ -21,8 +21,8 @@ export default async function ReadPage({ params }: { params: Promise<{ id: strin
         notFound();
     }
 
-    // Handle access control for EARLY_ACCESS books (Skip logic for MVP, assuming simple check)
-    if (book.visibility === 'EARLY_ACCESS' && session.user.role !== 'ADMIN') {
+    // Handle access control for EARLY_ACCESS books
+    if (book.visibility === 'EARLY_ACCESS' && session.user.role !== 'ADMIN' && session.user.role !== 'MEMBER') {
         const access = await prisma.userAccess.findUnique({
             where: {
                 userId_bookId: {
