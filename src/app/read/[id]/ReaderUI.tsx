@@ -238,17 +238,18 @@ export default function ReaderUI({
                 {/* Tab header */}
                 <div className={styles.sidebarTabs}>
                     <button
-                        className={`${styles.tabBtn} ${activeTab === 'notes' ? styles.tabActive : ''}`}
-                        onClick={() => setActiveTab('notes')}
-                    >
-                        📝 Notes
-                    </button>
-                    <button
                         className={`${styles.tabBtn} ${activeTab === 'bookmarks' ? styles.tabActive : ''}`}
                         onClick={() => setActiveTab('bookmarks')}
                     >
                         🔖 Bookmarks
                     </button>
+                    <button
+                        className={`${styles.tabBtn} ${activeTab === 'notes' ? styles.tabActive : ''}`}
+                        onClick={() => setActiveTab('notes')}
+                    >
+                        📝 Notes
+                    </button>
+
                 </div>
 
                 {/* Notes Tab */}

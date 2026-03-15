@@ -1,15 +1,37 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+const VISIBILITY_LABELS: Record<string, string> = {
+  FREE: '🟢 Free',
+  EARLY_ACCESS: '🟡 Early Access',
+  HIDDEN: '⚫ Hidden',
+};
+
 export default async function Home() {
-  // Fetch all free books (we can add logic for EARLY_ACCESS later)
+  const session = await getServerSession(authOptions);
+  const role = session?.user?.role || 'GUEST';
+
+  // Role-based visibility logic:
+  // - ADMIN: sees EVERYTHING
+  // - MEMBER: sees FREE + EARLY_ACCESS
+  // - GUEST/USER: sees only FREE
+  let visibilityFilter: any = { visibility: 'FREE' };
+
+  if (role === 'ADMIN') {
+    visibilityFilter = {}; // No filter for admins
+  } else if (role === 'MEMBER') {
+    visibilityFilter = {
+      visibility: { in: ['FREE', 'EARLY_ACCESS'] }
+    };
+  }
+
   const books = await prisma.book.findMany({
-    where: {
-      visibility: 'FREE',
-    },
+    where: visibilityFilter,
     orderBy: {
       createdAt: 'desc',
     },
@@ -18,6 +40,7 @@ export default async function Home() {
       title: true,
       coverImage: true,
       createdAt: true,
+      visibility: true,
     },
   });
 
@@ -40,6 +63,9 @@ export default async function Home() {
           <div className={styles.bookGrid}>
             {books.map((book: any) => (
               <Link href={`/read/${book.id}`} key={book.id} className={styles.bookCard}>
+                <span className={`${styles.badge} ${styles[`badge${book.visibility}`]}`}>
+                  {VISIBILITY_LABELS[book.visibility]}
+                </span>
                 <div className={styles.bookCover}>
                   {book.coverImage ? (
                     <img src={book.coverImage} alt={book.title} />
