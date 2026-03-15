@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import styles from './reader.module.css';
 import { useNav } from '@/context/NavContext';
+import React from 'react';
 
 type Book = { id: string; title: string; content: string };
 type Progress = { scrollPosition: number } | null;
@@ -32,6 +33,8 @@ export default function ReaderUI({
     const [activeTab, setActiveTab] = useState<'notes' | 'bookmarks'>('notes');
     const [bookmarkLabel, setBookmarkLabel] = useState('');
     const [showBookmarkInput, setShowBookmarkInput] = useState(false);
+    const [showSelectionIcon, setShowSelectionIcon] = useState(false);
+    const [selectionCoords, setSelectionCoords] = useState<{ top: number; left: number } | null>(null);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
     const { setNavTitle } = useNav();
@@ -86,18 +89,36 @@ export default function ReaderUI({
 
     const handleSelection = () => {
         const selection = window.getSelection();
-        if (selection && selection.toString().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
+        if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
             const range = selection.getRangeAt(0);
-            setCurrentSelection({
-                text: selection.toString(),
-                range: range.cloneRange(),
-            });
-            setShowNoteInput(true);
-            setActiveTab('notes');
-            setShowMobileSidebar(true); // opens sidebar on mobile; no-op visually on desktop
+            const rect = range.getBoundingClientRect();
+            const containerRect = contentRef.current.parentElement?.getBoundingClientRect();
+
+            if (containerRect) {
+                setSelectionCoords({
+                    top: rect.top - containerRect.top - 45,
+                    left: rect.left - containerRect.left + (rect.width / 2),
+                });
+                setCurrentSelection({
+                    text: selection.toString(),
+                    range: range.cloneRange(),
+                });
+                setShowSelectionIcon(true);
+            }
         } else {
-            setShowNoteInput(false);
+            // Only hide if we aren't currently entering a note
+            if (!showNoteInput) {
+                setShowSelectionIcon(false);
+                setSelectionCoords(null);
+            }
         }
+    };
+
+    const handleIconClick = () => {
+        setShowNoteInput(true);
+        setActiveTab('notes');
+        setShowMobileSidebar(true);
+        setShowSelectionIcon(false);
     };
 
     const saveAnnotation = async () => {
@@ -177,12 +198,12 @@ export default function ReaderUI({
         window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     };
 
-    // Process content to add chapter separators
-    const processContent = (html: string) => {
-        return html
+    // Memoize processed content to prevent innerHTML reset on re-render (which clears selection)
+    const processedContent = useMemo(() => {
+        return book.content
             .replace(/<h1/g, '<div class="chapter-separator" aria-hidden="true"><span>·  ✶  ·</span></div><h1')
             .replace(/<h2/g, '<div class="chapter-break" aria-hidden="true"></div><h2');
-    };
+    }, [book.content]);
 
     return (
         <div className={styles.readerContainer}>
@@ -211,18 +232,37 @@ export default function ReaderUI({
                 />
             </div>
 
-            <main
-                className={styles.contentArea}
-                ref={contentRef}
-                onMouseUp={handleSelection}
-                onTouchEnd={handleSelection}
-            >
-                <h1 className={styles.bookTitle}>{book.title}</h1>
-                <div
-                    className={styles.htmlContent}
-                    dangerouslySetInnerHTML={{ __html: processContent(book.content) }}
-                />
-            </main>
+            <BookContent
+                title={book.title}
+                processedContent={processedContent}
+                contentRef={contentRef}
+                handleSelection={handleSelection}
+            />
+
+            {showSelectionIcon && selectionCoords && (
+                <button
+                    className={styles.selectionNoteIcon}
+                    style={{
+                        top: selectionCoords.top,
+                        left: selectionCoords.left,
+                    }}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                    onMouseUp={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleIconClick();
+                    }}
+                >
+                    📝
+                </button>
+            )}
 
             {/* Mobile FAB */}
             <button
@@ -356,3 +396,33 @@ export default function ReaderUI({
         </div>
     );
 }
+
+// Separate memoized component for book content to prevent selection loss on parent re-renders
+const BookContent = React.memo(({
+    title,
+    processedContent,
+    contentRef,
+    handleSelection
+}: {
+    title: string;
+    processedContent: string;
+    contentRef: React.RefObject<HTMLDivElement | null>;
+    handleSelection: () => void;
+}) => {
+    return (
+        <main
+            className={styles.contentArea}
+            ref={contentRef}
+            onMouseUp={handleSelection}
+            onTouchEnd={handleSelection}
+        >
+            <h1 className={styles.bookTitle}>{title}</h1>
+            <div
+                className={styles.htmlContent}
+                dangerouslySetInnerHTML={{ __html: processedContent }}
+            />
+        </main>
+    );
+});
+
+BookContent.displayName = 'BookContent';
