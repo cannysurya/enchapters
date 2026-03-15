@@ -30,9 +30,6 @@ export default function NavBar() {
                 <div className={styles.logo}>
                     {navTitle ? (
                         <div className={styles.dynamicHeader}>
-                            <Link href="/" className={styles.homeIcon} title="Back to Library">
-                                ⬅
-                            </Link>
                             <span className={styles.navBookTitle}>{navTitle}</span>
                         </div>
                     ) : (

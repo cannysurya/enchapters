@@ -502,7 +502,15 @@
     }
 
     .scrollTrack {
-        display: none;
+        display: block;
+        width: 12px;
+        right: 2px;
+        opacity: 0.8;
+    }
+    
+    .scrollThumb {
+        width: 100%;
+        border-radius: 6px;
     }
 
     .progressText {
@@ -603,6 +611,13 @@
     transform: translateX(-50%) scale(1.15);
     box-shadow: 0 12px 30px rgba(59, 130, 246, 0.6);
     filter: brightness(1.1);
+}
+
+.noteIconImage {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 @keyframes popIn {
