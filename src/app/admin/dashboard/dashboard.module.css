@@ -1,0 +1,497 @@
+/* ===========================
+   ADMIN DASHBOARD — Premium UI
+   =========================== */
+
+/* ===== PAGE LAYOUT ===== */
+.container {
+    min-height: calc(100vh - 72px);
+    background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #f0f9ff 100%);
+    font-family: var(--font-inter), sans-serif;
+}
+
+/* ===== HERO HEADER ===== */
+.header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e40af 100%);
+    padding: 3rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.headerContent {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.headerBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.header h1 {
+    font-family: var(--font-outfit), sans-serif;
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.header p {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 1rem;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+    max-width: 1100px;
+    margin: -2rem auto 0;
+    padding: 0 1.5rem 4rem;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ===== CARDS ===== */
+.card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    overflow: hidden;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.cardIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.cardIconUpload {
+    background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+}
+
+.cardIconBooks {
+    background: linear-gradient(135deg, #d1fae5, #dbeafe);
+}
+
+.cardTitle {
+    font-family: var(--font-outfit), sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.cardSubtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 1px;
+}
+
+.cardBody {
+    padding: 2rem;
+}
+
+/* ===== UPLOAD FORM ===== */
+.form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.formFull {
+    grid-column: 1 / -1;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.formGroup label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    letter-spacing: 0.01em;
+}
+
+.input,
+.select {
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #1e293b;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.input:focus,
+.select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* File drop zone */
+.fileDropZone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.fileDropZone:hover,
+.fileDropZoneActive {
+    border-color: var(--accent-color);
+    background: #eff6ff;
+}
+
+.fileDropZone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.fileIcon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.fileDropText {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.fileDropHint {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.fileSelected {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.submitBtn {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-outfit), sans-serif;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.submitBtn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.submitBtn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.submitBtn:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.messageSuccess,
+.messageError {
+    grid-column: 1 / -1;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: slideDown 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.messageSuccess {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.messageError {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* ===== BOOK LIST ===== */
+.booksGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.bookRow {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 2rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+}
+
+.bookRow:last-child {
+    border-bottom: none;
+}
+
+.bookRow:hover {
+    background: #f8fafc;
+}
+
+.bookRowTitle {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bookRowMeta {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.badgeFREE {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badgeEARLY_ACCESS {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+.badgeHIDDEN {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.actionBtn {
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    background: transparent;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.actionBtn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: #eff6ff;
+}
+
+.emptyBooks {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.emptyBooks p {
+    font-size: 0.95rem;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .header {
+        padding: 2rem 1.25rem 3.5rem;
+    }
+
+    .main {
+        padding: 0 1rem 3rem;
+    }
+
+    .cardBody {
+        padding: 1.25rem;
+    }
+
+    .cardHeader {
+        padding: 1.25rem;
+    }
+
+    .form {
+        grid-template-columns: 1fr;
+    }
+
+    .formFull {
+        grid-column: 1;
+    }
+
+    .submitBtn {
+        grid-column: 1;
+    }
+
+    .messageSuccess,
+    .messageError {
+        grid-column: 1;
+    }
+
+    .bookRow {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+        padding: 1rem 1.25rem;
+    }
+
+    .bookRowActions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .container {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0c1a3a 100%);
+    }
+
+    .card {
+        background: #1e293b;
+        border-color: #334155;
+    }
+
+    .cardHeader {
+        border-color: #334155;
+    }
+
+    .cardTitle {
+        color: #f1f5f9;
+    }
+
+    .input,
+    .select {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+    }
+
+    .fileDropZone {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    .fileDropZone:hover {
+        background: #1e2a4a;
+    }
+
+    .bookRow:hover {
+        background: #263550;
+    }
+
+    .bookRow {
+        border-color: #334155;
+    }
+
+    .bookRowTitle {
+        color: #f1f5f9;
+    }
+
+    .actionBtn {
+        border-color: #334155;
+        color: #94a3b8;
+    }
+
+    .actionBtn:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: rgba(59, 130, 246, 0.08);
+    }
+}
