@@ -44,33 +44,6 @@
     pointer-events: none;
 }
 
-/* ===== SCROLL TRACK (side navigation) ===== */
-.scrollTrack {
-    position: fixed;
-    right: 4px;
-    top: 80px;
-    bottom: 16px;
-    width: 6px;
-    background: rgba(0, 0, 0, 0.04);
-    border-radius: 3px;
-    z-index: 1050;
-    cursor: pointer;
-    transition: width 0.2s ease, opacity 0.2s ease;
-    opacity: 0.6;
-}
-
-.scrollTrack:hover {
-    width: 10px;
-    opacity: 1;
-}
-
-.scrollThumb {
-    width: 100%;
-    background: linear-gradient(180deg, var(--accent-color), #8b5cf6);
-    border-radius: 3px;
-    transition: height 0.15s ease-out;
-    min-height: 4px;
-}
 
 /* ===== MAIN CONTENT ===== */
 .contentArea {
@@ -501,12 +474,7 @@
         animation: fadeIn 0.2s ease;
     }
 
-    .scrollTrack {
-        display: block;
-        width: 12px;
-        right: 2px;
-        opacity: 0.8;
-    }
+    /* Traditional native scroll is enabled by default */
     
     .scrollThumb {
         width: 100%;
@@ -576,9 +544,6 @@
         background: rgba(255, 255, 255, 0.06);
     }
 
-    .scrollTrack {
-        background: rgba(255, 255, 255, 0.06);
-    }
 
     .selectionNoteIcon {
         background: linear-gradient(135deg, #1e293b, #334155);

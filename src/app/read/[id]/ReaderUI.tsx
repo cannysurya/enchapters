@@ -216,21 +216,6 @@ export default function ReaderUI({
                 <span className={styles.progressText}>{Math.round(readProgress)}%</span>
             </div>
 
-            {/* Clickable scroll track for fast navigation */}
-            <div
-                className={styles.scrollTrack}
-                onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const ratio = (e.clientY - rect.top) / rect.height;
-                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                    window.scrollTo({ top: ratio * docHeight, behavior: 'smooth' });
-                }}
-            >
-                <div
-                    className={styles.scrollThumb}
-                    style={{ height: `${readProgress}%` }}
-                />
-            </div>
 
             <BookContent
                 title={book.title}
