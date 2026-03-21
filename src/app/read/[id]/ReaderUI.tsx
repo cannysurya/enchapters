@@ -30,12 +30,15 @@ export default function ReaderUI({
     const [currentSelection, setCurrentSelection] = useState<{ text: string; range: any } | null>(null);
     const [noteText, setNoteText] = useState('');
     const [readProgress, setReadProgress] = useState(0);
-    const [activeTab, setActiveTab] = useState<'notes' | 'bookmarks'>('notes');
+    const [activeTab, setActiveTab] = useState<'notes' | 'bookmarks'>('bookmarks');
     const [bookmarkLabel, setBookmarkLabel] = useState('');
     const [showBookmarkInput, setShowBookmarkInput] = useState(false);
-    const [showSelectionIcon, setShowSelectionIcon] = useState(false);
+    const [showSelectionMenu, setShowSelectionMenu] = useState(false);
     const [selectionCoords, setSelectionCoords] = useState<{ top: number; left: number } | null>(null);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+    const [showBottomNav, setShowBottomNav] = useState(false);
+    const [totalPages, setTotalPages] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const { setNavTitle } = useNav();
 
@@ -79,12 +82,33 @@ export default function ReaderUI({
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
             const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
             setReadProgress(Math.min(100, Math.max(0, progress)));
+            
+            // Calculate simulated pages
+            const visibleHeight = window.innerHeight;
+            const total = Math.max(1, Math.ceil(document.documentElement.scrollHeight / visibleHeight));
+            const current = Math.min(total, Math.floor(scrollTop / visibleHeight) + 1);
+            setTotalPages(total);
+            setCurrentPage(current);
+
             saveProgressDebounced();
         };
 
+        // Recalculate pages on resize
+        const handleResize = () => {
+            handleScroll();
+        };
+
         window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll(); // initial call
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener('resize', handleResize);
+        
+        // Timeout to ensure content is fully loaded and painted before initial measurement
+        const timeoutId = setTimeout(handleScroll, 200);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleResize);
+            clearTimeout(timeoutId);
+        };
     }, [saveProgressDebounced]);
 
     const handleSelection = () => {
@@ -103,32 +127,64 @@ export default function ReaderUI({
                     text: selection.toString(),
                     range: range.cloneRange(),
                 });
-                setShowSelectionIcon(true);
+                setShowSelectionMenu(true);
             }
         } else {
             // Only hide if we aren't currently entering a note
             if (!showNoteInput) {
-                setShowSelectionIcon(false);
+                setShowSelectionMenu(false);
                 setSelectionCoords(null);
             }
         }
+    };
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
+            e.preventDefault(); // Override default right-click when text is selected
+        }
+    };
+
+    const handleCopyToClipboard = async () => {
+        if (currentSelection) {
+            try {
+                await navigator.clipboard.writeText(currentSelection.text);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+        }
+        setShowSelectionMenu(false);
     };
 
     const handleIconClick = () => {
         setShowNoteInput(true);
         setActiveTab('notes');
         setShowMobileSidebar(true);
-        setShowSelectionIcon(false);
+        setShowSelectionMenu(false);
+    };
+
+    const handleContentClick = (e: React.MouseEvent) => {
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim().length > 0) {
+            return; // Document something is selected, don't toggle nav
+        }
+        setShowBottomNav(prev => !prev);
     };
 
     const saveAnnotation = async () => {
         if (!currentSelection) return;
 
+        const currentScroll = Math.round(window.scrollY);
+        const pageNum = currentPage;
+
         const newAnnotation = {
             id: Date.now().toString(),
             text: currentSelection.text,
             note: noteText,
-            rangeData: 'mock-range-data',
+            rangeData: JSON.stringify({
+                scrollPosition: currentScroll,
+                pageNumber: pageNum,
+            }),
         };
 
         setAnnotations([...annotations, newAnnotation]);
@@ -143,7 +199,7 @@ export default function ReaderUI({
                     bookId: book.id,
                     text: currentSelection.text,
                     note: noteText || null,
-                    rangeData: JSON.stringify({ offset: 0 }),
+                    rangeData: newAnnotation.rangeData,
                 }),
             });
         } catch (err) {
@@ -153,7 +209,9 @@ export default function ReaderUI({
 
     const addBookmark = async () => {
         const scrollPos = Math.round(window.scrollY);
-        const label = bookmarkLabel.trim() || `Bookmark at ${Math.round(readProgress)}%`;
+        const pageNum = currentPage;
+        const baseLabel = bookmarkLabel.trim();
+        const label = baseLabel ? `${baseLabel} (Page ${pageNum})` : `Bookmark at Page ${pageNum}`;
 
         const tempBookmark: Bookmark = {
             id: Date.now().toString(),
@@ -198,6 +256,17 @@ export default function ReaderUI({
         window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     };
 
+    const goToAnnotation = (rangeData: string) => {
+        try {
+            const data = JSON.parse(rangeData);
+            if (data.scrollPosition !== undefined) {
+                window.scrollTo({ top: data.scrollPosition, behavior: 'smooth' });
+            }
+        } catch (e) {
+            console.error('Failed to parse rangeData for navigation', e);
+        }
+    };
+
     // Memoize processed content to prevent innerHTML reset on re-render (which clears selection)
     const processedContent = useMemo(() => {
         return book.content
@@ -206,14 +275,14 @@ export default function ReaderUI({
     }, [book.content]);
 
     return (
-        <div className={styles.readerContainer}>
+        <div className={styles.readerContainer} onClick={handleContentClick}>
             {/* Reading Progress Bar */}
             <div className={styles.progressBarContainer}>
                 <div
                     className={styles.progressBar}
                     style={{ width: `${readProgress}%` }}
                 />
-                <span className={styles.progressText}>{Math.round(readProgress)}%</span>
+                <span className={styles.progressText}>Page {currentPage}</span>
             </div>
 
 
@@ -222,11 +291,38 @@ export default function ReaderUI({
                 processedContent={processedContent}
                 contentRef={contentRef}
                 handleSelection={handleSelection}
+                handleContextMenu={handleContextMenu}
             />
 
-            {showSelectionIcon && selectionCoords && (
-                <button
-                    className={styles.selectionNoteIcon}
+            {/* Bottom Scrubber Nav */}
+            {showBottomNav && (
+                <div 
+                    className={styles.bottomNavContainer}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className={styles.sliderWrapper}>
+                        <input 
+                            type="range" 
+                            min="1" 
+                            max={totalPages} 
+                            value={currentPage} 
+                            onChange={(e) => {
+                                const newPage = parseInt(e.target.value, 10);
+                                const visibleHeight = window.innerHeight;
+                                const targetScroll = (newPage - 1) * visibleHeight;
+                                window.scrollTo({ top: targetScroll, behavior: 'auto' });
+                                setCurrentPage(newPage);
+                            }}
+                            className={styles.pageSlider}
+                        />
+                        <span className={styles.pageIndicator}>{currentPage} of {totalPages}</span>
+                    </div>
+                </div>
+            )}
+
+            {showSelectionMenu && selectionCoords && (
+                <div
+                    className={styles.selectionMenu}
                     style={{
                         top: selectionCoords.top,
                         left: selectionCoords.left,
@@ -239,20 +335,37 @@ export default function ReaderUI({
                         e.preventDefault();
                         e.stopPropagation();
                     }}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleIconClick();
-                    }}
                 >
-                    📝
-                </button>
+                    <button
+                        className={styles.menuItem}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleIconClick();
+                        }}
+                    >
+                        Add to notes
+                    </button>
+                    <button
+                        className={styles.menuItem}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCopyToClipboard();
+                        }}
+                    >
+                        Copy text
+                    </button>
+                </div>
             )}
 
             {/* Mobile FAB */}
             <button
-                className={styles.mobileFab}
-                onClick={() => setShowMobileSidebar(true)}
+                className={`${styles.mobileFab} ${showBottomNav ? styles.mobileFabWithNav : ''}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMobileSidebar(true);
+                }}
                 aria-label="Open notes and bookmarks"
             >
                 📝
@@ -291,6 +404,9 @@ export default function ReaderUI({
                     <div className={styles.tabContent}>
                         {showNoteInput && (
                             <div className={styles.noteInputBox}>
+                                <div className={styles.noteInputHeader}>
+                                    <span className={styles.pageBadge}>Page {currentPage}</span>
+                                </div>
                                 <p className={styles.selectedQuote}>"{currentSelection?.text}"</p>
                                 <textarea
                                     placeholder="Add a note..."
@@ -309,12 +425,27 @@ export default function ReaderUI({
                             {annotations.length === 0 && !showNoteInput && (
                                 <p className={styles.emptyAnnotations}>Select text to add highlights and notes.</p>
                             )}
-                            {annotations.map((ann) => (
-                                <div key={ann.id} className={styles.annotationCard}>
-                                    <p className={styles.quote}>"{ann.text}"</p>
-                                    {ann.note && <p className={styles.note}>{ann.note}</p>}
-                                </div>
-                            ))}
+                            {annotations.map((ann) => {
+                                let pageNum = null;
+                                try {
+                                    const data = JSON.parse(ann.rangeData);
+                                    pageNum = data.pageNumber;
+                                } catch (e) { }
+
+                                return (
+                                    <div
+                                        key={ann.id}
+                                        className={`${styles.annotationCard} ${styles.clickableCard}`}
+                                        onClick={() => goToAnnotation(ann.rangeData)}
+                                    >
+                                        <div className={styles.cardHeader}>
+                                            <p className={styles.quote}>"{ann.text}"</p>
+                                            {pageNum !== null && <span className={styles.cardPageBadge}>Page {pageNum}</span>}
+                                        </div>
+                                        {ann.note && <p className={styles.note}>{ann.note}</p>}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -387,12 +518,14 @@ const BookContent = React.memo(({
     title,
     processedContent,
     contentRef,
-    handleSelection
+    handleSelection,
+    handleContextMenu
 }: {
     title: string;
     processedContent: string;
     contentRef: React.RefObject<HTMLDivElement | null>;
     handleSelection: () => void;
+    handleContextMenu: (e: React.MouseEvent) => void;
 }) => {
     return (
         <main
@@ -400,6 +533,7 @@ const BookContent = React.memo(({
             ref={contentRef}
             onMouseUp={handleSelection}
             onTouchEnd={handleSelection}
+            onContextMenu={handleContextMenu}
         >
             <h1 className={styles.bookTitle}>{title}</h1>
             <div
