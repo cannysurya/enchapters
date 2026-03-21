@@ -202,6 +202,22 @@
     animation: slideDown 0.3s ease;
 }
 
+.noteInputHeader {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
+}
+
+.pageBadge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
 .selectedQuote {
     font-style: italic;
     color: var(--text-secondary);
@@ -278,8 +294,31 @@
 .quote {
     font-style: italic;
     color: #4b5563;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
     font-size: 0.95rem;
+    flex: 1;
+}
+
+.clickableCard {
+    cursor: pointer;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.cardPageBadge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--background-body);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
 .note {
@@ -384,6 +423,79 @@
     color: #ef4444;
 }
 
+/* ===== BOTTOM NAV ===== */
+.bottomNavContainer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    background: var(--card-bg, #ffffff);
+    border-top: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sliderWrapper {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pageSlider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.pageSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color, #3b82f6);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s;
+}
+
+.pageSlider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.pageIndicator {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 70px;
+    text-align: right;
+    font-family: var(--font-inter);
+}
+
 /* ===== ANIMATIONS ===== */
 @keyframes slideDown {
     from {
@@ -458,7 +570,11 @@
         font-size: 1.4rem;
         cursor: pointer;
         z-index: 1500;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, bottom 0.3s ease;
+    }
+
+    .mobileFabWithNav {
+        bottom: 90px;
     }
 
     .mobileFab:active {
@@ -545,44 +661,62 @@
     }
 
 
-    .selectionNoteIcon {
-        background: linear-gradient(135deg, #1e293b, #334155);
-        border: 1px solid #475569;
+    .selectionMenu {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    
+    .menuItem {
+        color: #f8fafc;
+    }
+    
+    .menuItem:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .bottomNavContainer {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    .pageSlider {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    .pageIndicator {
+        color: #94a3b8;
     }
 }
 
-.selectionNoteIcon {
+.selectionMenu {
     position: absolute;
-    background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
-    border: 2px solid white;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    cursor: pointer;
+    flex-direction: column;
+    padding: 0.5rem;
     z-index: 1000;
     transform: translateX(-50%);
     animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-    color: white;
-    user-select: none;
-    -webkit-user-select: none;
+    min-width: 150px;
 }
 
-.selectionNoteIcon:hover {
-    transform: translateX(-50%) scale(1.15);
-    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.6);
-    filter: brightness(1.1);
+.menuItem {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+    transition: background-color 0.2s;
+    width: 100%;
 }
 
-.noteIconImage {
-    width: 26px;
-    height: 26px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+.menuItem:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 @keyframes popIn {
