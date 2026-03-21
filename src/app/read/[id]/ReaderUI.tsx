@@ -111,7 +111,7 @@ export default function ReaderUI({
         };
     }, [saveProgressDebounced]);
 
-    const handleSelection = () => {
+    const handleSelection = useCallback(() => {
         const selection = window.getSelection();
         if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
             const range = selection.getRangeAt(0);
@@ -136,7 +136,23 @@ export default function ReaderUI({
                 setSelectionCoords(null);
             }
         }
-    };
+    }, [showNoteInput]);
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+        const onSelectionChange = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                handleSelection();
+            }, 150); // Debounce to allow selection handles to settle
+        };
+        
+        document.addEventListener('selectionchange', onSelectionChange);
+        return () => {
+            document.removeEventListener('selectionchange', onSelectionChange);
+            clearTimeout(timeoutId);
+        };
+    }, [handleSelection]);
 
     const handleContextMenu = (e: React.MouseEvent) => {
         const selection = window.getSelection();
@@ -290,7 +306,6 @@ export default function ReaderUI({
                 title={book.title}
                 processedContent={processedContent}
                 contentRef={contentRef}
-                handleSelection={handleSelection}
                 handleContextMenu={handleContextMenu}
             />
 
@@ -518,21 +533,17 @@ const BookContent = React.memo(({
     title,
     processedContent,
     contentRef,
-    handleSelection,
     handleContextMenu
 }: {
     title: string;
     processedContent: string;
     contentRef: React.RefObject<HTMLDivElement | null>;
-    handleSelection: () => void;
     handleContextMenu: (e: React.MouseEvent) => void;
 }) => {
     return (
         <main
             className={styles.contentArea}
             ref={contentRef}
-            onMouseUp={handleSelection}
-            onTouchEnd={handleSelection}
             onContextMenu={handleContextMenu}
         >
             <h1 className={styles.bookTitle}>{title}</h1>
