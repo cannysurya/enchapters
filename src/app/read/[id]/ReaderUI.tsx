@@ -39,6 +39,7 @@ export default function ReaderUI({
     const [showBottomNav, setShowBottomNav] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
+    const isPointerDownRef = useRef(false);
 
     const { setNavTitle } = useNav();
 
@@ -112,6 +113,8 @@ export default function ReaderUI({
     }, [saveProgressDebounced]);
 
     const handleSelection = useCallback(() => {
+        if (isPointerDownRef.current) return;
+
         const selection = window.getSelection();
         if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
             const range = selection.getRangeAt(0);
@@ -119,8 +122,9 @@ export default function ReaderUI({
             const containerRect = contentRef.current.parentElement?.getBoundingClientRect();
 
             if (containerRect) {
+                const isMobile = window.innerWidth <= 768;
                 setSelectionCoords({
-                    top: rect.top - containerRect.top - 45,
+                    top: rect.top - containerRect.top + (isMobile ? rect.height + 15 : -45),
                     left: rect.left - containerRect.left + (rect.width / 2),
                 });
                 setCurrentSelection({
@@ -146,10 +150,36 @@ export default function ReaderUI({
                 handleSelection();
             }, 150); // Debounce to allow selection handles to settle
         };
+
+        const handlePointerDown = (e: PointerEvent | MouseEvent | TouchEvent) => {
+            const target = e.target as HTMLElement;
+            if (target && target.closest && target.closest('#reader-selection-menu')) {
+                return;
+            }
+            isPointerDownRef.current = true;
+            setShowSelectionMenu(false);
+        };
+
+        const handlePointerUp = () => {
+            isPointerDownRef.current = false;
+            setTimeout(() => {
+                handleSelection();
+            }, 50);
+        };
         
         document.addEventListener('selectionchange', onSelectionChange);
+        document.addEventListener('pointerdown', handlePointerDown);
+        document.addEventListener('pointerup', handlePointerUp);
+        // Fallbacks for Safari/mobile if pointer events fail
+        document.addEventListener('touchstart', handlePointerDown, { passive: true });
+        document.addEventListener('touchend', handlePointerUp);
+
         return () => {
             document.removeEventListener('selectionchange', onSelectionChange);
+            document.removeEventListener('pointerdown', handlePointerDown);
+            document.removeEventListener('pointerup', handlePointerUp);
+            document.removeEventListener('touchstart', handlePointerDown);
+            document.removeEventListener('touchend', handlePointerUp);
             clearTimeout(timeoutId);
         };
     }, [handleSelection]);
@@ -337,6 +367,7 @@ export default function ReaderUI({
 
             {showSelectionMenu && selectionCoords && (
                 <div
+                    id="reader-selection-menu"
                     className={styles.selectionMenu}
                     style={{
                         top: selectionCoords.top,
