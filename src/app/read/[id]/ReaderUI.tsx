@@ -33,8 +33,6 @@ export default function ReaderUI({
     const [activeTab, setActiveTab] = useState<'notes' | 'bookmarks'>('bookmarks');
     const [bookmarkLabel, setBookmarkLabel] = useState('');
     const [showBookmarkInput, setShowBookmarkInput] = useState(false);
-    const [showSelectionMenu, setShowSelectionMenu] = useState(false);
-    const [selectionCoords, setSelectionCoords] = useState<{ top: number; left: number } | null>(null);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
     const [showBottomNav, setShowBottomNav] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
@@ -118,29 +116,19 @@ export default function ReaderUI({
         const selection = window.getSelection();
         if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
             const range = selection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
-            const containerRect = contentRef.current.parentElement?.getBoundingClientRect();
+            setCurrentSelection({
+                text: selection.toString(),
+                range: range.cloneRange(),
+            });
 
-            if (containerRect) {
-                const isMobile = window.innerWidth <= 768;
-                setSelectionCoords({
-                    top: rect.top - containerRect.top + (isMobile ? rect.height + 15 : -45),
-                    left: rect.left - containerRect.left + (rect.width / 2),
-                });
-                setCurrentSelection({
-                    text: selection.toString(),
-                    range: range.cloneRange(),
-                });
-                setShowSelectionMenu(true);
+            if (activeTab === 'notes') {
+                setShowNoteInput(true);
             }
         } else {
-            // Only hide if we aren't currently entering a note
-            if (!showNoteInput) {
-                setShowSelectionMenu(false);
-                setSelectionCoords(null);
-            }
+            setCurrentSelection(null);
+            setShowNoteInput(false);
         }
-    }, [showNoteInput]);
+    }, [activeTab]);
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
@@ -152,12 +140,7 @@ export default function ReaderUI({
         };
 
         const handlePointerDown = (e: PointerEvent | MouseEvent | TouchEvent) => {
-            const target = e.target as HTMLElement;
-            if (target && target.closest && target.closest('#reader-selection-menu')) {
-                return;
-            }
             isPointerDownRef.current = true;
-            setShowSelectionMenu(false);
         };
 
         const handlePointerUp = () => {
@@ -184,36 +167,12 @@ export default function ReaderUI({
         };
     }, [handleSelection]);
 
-    const handleContextMenu = (e: React.MouseEvent) => {
-        const selection = window.getSelection();
-        if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
-            e.preventDefault(); // Override default right-click when text is selected
-        }
-    };
-
-    const handleCopyToClipboard = async () => {
-        if (currentSelection) {
-            try {
-                await navigator.clipboard.writeText(currentSelection.text);
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-            }
-        }
-        setShowSelectionMenu(false);
-    };
-
-    const handleIconClick = () => {
-        setShowNoteInput(true);
-        setActiveTab('notes');
-        setShowMobileSidebar(true);
-        setShowSelectionMenu(false);
-    };
-
     const handleContentClick = (e: React.MouseEvent) => {
         const selection = window.getSelection();
         if (selection && selection.toString().trim().length > 0) {
             return; // Document something is selected, don't toggle nav
         }
+        setCurrentSelection(null); // Clear cached selection if nothing is truly highlighted
         setShowBottomNav(prev => !prev);
     };
 
@@ -336,7 +295,6 @@ export default function ReaderUI({
                 title={book.title}
                 processedContent={processedContent}
                 contentRef={contentRef}
-                handleContextMenu={handleContextMenu}
             />
 
             {/* Bottom Scrubber Nav */}
@@ -360,48 +318,8 @@ export default function ReaderUI({
                             }}
                             className={styles.pageSlider}
                         />
-                        <span className={styles.pageIndicator}>{currentPage} of {totalPages}</span>
+                        <span className={styles.pageIndicator}>{currentPage} / {totalPages}</span>
                     </div>
-                </div>
-            )}
-
-            {showSelectionMenu && selectionCoords && (
-                <div
-                    id="reader-selection-menu"
-                    className={styles.selectionMenu}
-                    style={{
-                        top: selectionCoords.top,
-                        left: selectionCoords.left,
-                    }}
-                    onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }}
-                    onMouseUp={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }}
-                >
-                    <button
-                        className={styles.menuItem}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleIconClick();
-                        }}
-                    >
-                        Add to notes
-                    </button>
-                    <button
-                        className={styles.menuItem}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCopyToClipboard();
-                        }}
-                    >
-                        Copy text
-                    </button>
                 </div>
             )}
 
@@ -410,6 +328,23 @@ export default function ReaderUI({
                 className={`${styles.mobileFab} ${showBottomNav ? styles.mobileFabWithNav : ''}`}
                 onClick={(e) => {
                     e.stopPropagation();
+                    const selection = window.getSelection();
+                    const hasNativeSelection = selection && selection.toString().trim().length > 0;
+                    
+                    if (hasNativeSelection || (currentSelection && currentSelection.text.trim().length > 0)) {
+                        // We need to make sure currentSelection has the exact text
+                        if (hasNativeSelection && (!currentSelection || currentSelection.text !== selection.toString())) {
+                            setCurrentSelection({
+                                text: selection.toString(),
+                                range: selection.getRangeAt(0).cloneRange(),
+                            });
+                        }
+                        setShowNoteInput(true);
+                        setActiveTab('notes');
+                    } else {
+                        // Act normally if no text is selected
+                        setShowNoteInput(false);
+                    }
                     setShowMobileSidebar(true);
                 }}
                 aria-label="Open notes and bookmarks"
@@ -438,7 +373,12 @@ export default function ReaderUI({
                     </button>
                     <button
                         className={`${styles.tabBtn} ${activeTab === 'notes' ? styles.tabActive : ''}`}
-                        onClick={() => setActiveTab('notes')}
+                        onClick={() => {
+                            setActiveTab('notes');
+                            if (currentSelection && currentSelection.text.trim().length > 0) {
+                                setShowNoteInput(true);
+                            }
+                        }}
                     >
                         📝 Notes
                     </button>
@@ -563,19 +503,16 @@ export default function ReaderUI({
 const BookContent = React.memo(({
     title,
     processedContent,
-    contentRef,
-    handleContextMenu
+    contentRef
 }: {
     title: string;
     processedContent: string;
     contentRef: React.RefObject<HTMLDivElement | null>;
-    handleContextMenu: (e: React.MouseEvent) => void;
 }) => {
     return (
         <main
             className={styles.contentArea}
             ref={contentRef}
-            onContextMenu={handleContextMenu}
         >
             <h1 className={styles.bookTitle}>{title}</h1>
             <div
