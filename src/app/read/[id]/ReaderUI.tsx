@@ -114,7 +114,10 @@ export default function ReaderUI({
         if (isPointerDownRef.current) return;
 
         const selection = window.getSelection();
-        if (selection && selection.toString().trim().length > 0 && contentRef.current?.contains(selection.anchorNode)) {
+        const hasSelection = selection && selection.toString().trim().length > 0;
+        const inReader = hasSelection && contentRef.current?.contains(selection.anchorNode);
+
+        if (inReader) {
             const range = selection.getRangeAt(0);
             setCurrentSelection({
                 text: selection.toString(),
@@ -125,10 +128,19 @@ export default function ReaderUI({
                 setShowNoteInput(true);
             }
         } else {
-            setCurrentSelection(null);
-            setShowNoteInput(false);
+            // If we're currently typing a note, don't clear the selection 
+            // just because the focus moved to the textarea.
+            if (showNoteInput) return;
+
+            // Only clear selection if we're not in an input/textarea
+            const isFocusInInput = document.activeElement instanceof HTMLTextAreaElement || 
+                                 document.activeElement instanceof HTMLInputElement;
+            if (!isFocusInInput) {
+                setCurrentSelection(null);
+                setShowNoteInput(false);
+            }
         }
-    }, [activeTab]);
+    }, [activeTab, showNoteInput]);
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
@@ -172,7 +184,9 @@ export default function ReaderUI({
         if (selection && selection.toString().trim().length > 0) {
             return; // Document something is selected, don't toggle nav
         }
-        setCurrentSelection(null); // Clear cached selection if nothing is truly highlighted
+        if (!showNoteInput) {
+            setCurrentSelection(null); // Clear cached selection if nothing is truly highlighted
+        }
         setShowBottomNav(prev => !prev);
     };
 
@@ -195,6 +209,7 @@ export default function ReaderUI({
         setAnnotations([...annotations, newAnnotation]);
         setShowNoteInput(false);
         setNoteText('');
+        setCurrentSelection(null); // Clear selection after saving
 
         try {
             await fetch('/api/annotations', {
@@ -401,7 +416,15 @@ export default function ReaderUI({
                                     className={styles.textarea}
                                 />
                                 <div className={styles.noteActions}>
-                                    <button onClick={() => setShowNoteInput(false)} className={styles.cancelBtn}>Cancel</button>
+                                    <button 
+                                        onClick={() => {
+                                            setShowNoteInput(false);
+                                            setCurrentSelection(null);
+                                        }} 
+                                        className={styles.cancelBtn}
+                                    >
+                                        Cancel
+                                    </button>
                                     <button onClick={saveAnnotation} className={styles.saveBtn}>Save</button>
                                 </div>
                             </div>
