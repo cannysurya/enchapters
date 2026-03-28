@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import UploadBookForm from './UploadBookForm';
 import BookList from './BookList';
+import UserList from './UserList';
 import styles from './dashboard.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,18 @@ export default async function AdminDashboard() {
     const books = await prisma.book.findMany({
         orderBy: { createdAt: 'desc' },
         select: { id: true, title: true, visibility: true, createdAt: true }
+    });
+
+    const users = await prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            image: true,
+            createdAt: true,
+        },
     });
 
     return (
@@ -55,6 +68,18 @@ export default async function AdminDashboard() {
                         </div>
                     </div>
                     <BookList initialBooks={books.map((b: any) => ({ ...b, createdAt: b.createdAt.toISOString() }))} />
+                </div>
+
+                {/* User List Card */}
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <div className={`${styles.cardIcon} ${styles.cardIconUsers}`}>👥</div>
+                        <div>
+                            <p className={styles.cardTitle}>User Management</p>
+                            <p className={styles.cardSubtitle}>{users.length} user{users.length !== 1 ? 's' : ''} registered</p>
+                        </div>
+                    </div>
+                    <UserList initialUsers={users.map((u: any) => ({ ...u, createdAt: u.createdAt.toISOString() }))} />
                 </div>
             </main>
         </div>
